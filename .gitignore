@@ -1,0 +1,19 @@
+# Virtual enviorment
+.venv/
+
+# Python cache
+__pycache__/ 
+*.pyc 
+
+# Envirment / config
+.env 
+*.sqlite3
+
+# IDE / editor stuff
+.DS_Store
+.Thumbs.db
+
+# Logs
+*.log 
+logs/
+
