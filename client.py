@@ -10,10 +10,25 @@ def get_url():
 class Client:
     def __init__(self):
         self.base_url = get_url()
+        self.url = self.base_url 
 
-    def test_success(self) -> Dict[str,str]:
-        return response.get(self.base_url)
+    def test_success_endpoint(self) -> Dict[str,str]:
+        self.url += "/ok"
+        response = requests.get(self.url)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return response.status_code
 
     def test_sleep(self, ms:int):
-        return response.get(self.base_url, timeout = 5)
+        self.url += f"/sleep?ms={ms}"
+
+        print("Starting test_sleep method:")
+        response = requests.get(self.url)
+        if response.status_code == 200:
+            print("Success.")
+            print(f"Time elapsed: {response.elapsed}")
+            return response.json()
+        else:
+            return response.status_code
 

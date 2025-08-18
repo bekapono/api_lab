@@ -4,11 +4,12 @@ import asyncio
 app = FastAPI()
 
 @app.get("/ok")
-asysnc def root():
+async def root():
     return {"message": "success"}
 
 ''' We pass in ms variable to allow different time testing '''
 @app.get("/sleep")
 async def sleep_endpoint(ms: int):
-    await asyncio.sleep(2)
+    task_1 = await asyncio.sleep(ms/1000)
+    
     return {"sleptMs": ms}
