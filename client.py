@@ -1,5 +1,6 @@
 import os
 import requests
+import time
 from typing import Dict
 from dotenv import load_dotenv
 from http import HTTPStatus
@@ -36,25 +37,47 @@ class Client:
                     - else raise unexpected status_code
                 - if timelimit is reached end tries.
         '''
-        total_time = 0
-        response = requests.get(self.url)
-
-        while total_time < 30:
+        
+        start_time = time.perf_counter()
+        max_time = 30
+        while time.perf_counter() - start_time < max_time:
             try:
                 response = requests.get(self.url)
-
-                total_time += response.elapsed 
-
+                # anything under here does not get computed if requests.get raises an exception
+                # total_time += response.elapsed -- cant use this the way I want to. 
+                return response.json()
             except requests.exceptions.ConnectTimeout:
+                '''
+                    ConnectionTimeout: 
+                        - Time to establish the connection 
+                        - is a connection-level error that happens before any HTTP response is received.
+                    
+                    Raises when:
+                        - The connection to the server cannot be established within the timeout period
+                        - No HTTP response is ever received
+                        - The TCP connection itself times out
+
+                    The timeout parameter in requests.get(url, timeout) 
+                '''
                 print('ConnectTimeout, good to retry')
                 continue
-            except requests.exceptions.HTTPError:
+            except requests.exceptions.HTTPError as e:
                 # test specific status_codes.
-                print(HTTPStatus(response.status_code).phrase)
+                print(HTTPStatus(response.status_code).phrase, e)
+                raise
             except requests.exceptions.ReadTimeout:
+                '''
+                    ReadTimeout:
+                        - Time to receive the response after connection is made
+
+                    The timeout parameter in requests.get(url, timeout)
+                '''
                 print('The server did not send any data in the allotted amount of time.')
+                raise
             except requests.exceptions.RequestException:
                 print('There was an ambigous exception that occurred while handling your request.')
+                raise
+
 
     def test_success_endpoint(self) -> Dict[str,str]:
         self.url += "/ok"
