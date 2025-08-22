@@ -36,6 +36,25 @@ class Client:
                     - else raise unexpected status_code
                 - if timelimit is reached end tries.
         '''
+        total_time = 0
+        response = requests.get(self.url)
+
+        while total_time < 30:
+            try:
+                response = requests.get(self.url)
+
+                total_time += response.elapsed 
+
+            except requests.exceptions.ConnectTimeout:
+                print('ConnectTimeout, good to retry')
+                continue
+            except requests.exceptions.HTTPError:
+                # test specific status_codes.
+                print(HTTPStatus(response.status_code).phrase)
+            except requests.exceptions.ReadTimeout:
+                print('The server did not send any data in the allotted amount of time.')
+            except requests.exceptions.RequestException:
+                print('There was an ambigous exception that occurred while handling your request.')
 
     def test_success_endpoint(self) -> Dict[str,str]:
         self.url += "/ok"
