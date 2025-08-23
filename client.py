@@ -18,7 +18,21 @@ def get_url():
     load_dotenv()
     return os.getenv("BASE_URL")
 
+class API_TIMER:
+    def __init__(self):
+        max_duration = 30 
+        start_time = time.perf_counter()
+
 class Client:
+    ACCEPTED_STATUS_CODES = {
+    
+        429: "Too many Requests"
+        500: "Internal Server Error"
+        502: "Bad Gatewate"
+        503: "Service Unavailable"
+        504: "Gateway Timeout"
+    }
+
     def __init__(self):
         self.base_url = get_url()
         self.url = self.base_url 
@@ -36,17 +50,17 @@ class Client:
                     - future raise for client_error, server_error
                     - else raise unexpected status_code
                 - if timelimit is reached end tries.
+                - avoid thundering heard by delay + random amount.
         '''
-        
-        start_time = time.perf_counter()
-        max_time = 30
-        while time.perf_counter() - start_time < max_time:
+
+        api_timer = API_TIMER()
+        while time.perf_counter() - api_timer.start_time < api_time.max_duration:
             try:
                 response = requests.get(self.url)
                 # anything under here does not get computed if requests.get raises an exception
                 # total_time += response.elapsed -- cant use this the way I want to. 
                 return response.json()
-            except requests.exceptions.ConnectTimeout:
+            except requests.exceptions.ConnectTimeout as e:
                 '''
                     ConnectionTimeout: 
                         - Time to establish the connection 
@@ -59,12 +73,18 @@ class Client:
 
                     The timeout parameter in requests.get(url, timeout) 
                 '''
-                print('ConnectTimeout, good to retry')
+                print(f"{e}, good to retry")
                 continue
             except requests.exceptions.HTTPError as e:
-                # test specific status_codes.
-                print(HTTPStatus(response.status_code).phrase, e)
-                raise
+                '''
+                    common status codes to retry: 500,502, 503, 504, 429
+                '''
+                if response.status_code in ACCEPTED_STATUS_CODES:
+                    print(f"{HTTPStatus(response.stats_code)}, good to retry.")
+                    continue
+                else:
+                    print(HTTPStatus(response.status_code).phrase, e)
+                    raise
             except requests.exceptions.ReadTimeout:
                 '''
                     ReadTimeout:
@@ -77,6 +97,9 @@ class Client:
             except requests.exceptions.RequestException:
                 print('There was an ambigous exception that occurred while handling your request.')
                 raise
+
+        # ran out of times/appemptes
+        return None # place-holder
 
 
     def test_success_endpoint(self) -> Dict[str,str]:
