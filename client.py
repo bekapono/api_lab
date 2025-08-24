@@ -57,10 +57,14 @@ class Client:
         while time.perf_counter() - api_timer.start_time < api_time.max_duration:
             try:
                 response = requests.get(self.url)
-                # anything under here does not get computed if requests.get raises an exception
-                
-                # total_time += response.elapsed -- cant use this the way I want to. 
-                return response.json()
+                '''
+                    Anything under here does not get computed if requests.get raises an exception
+                '''
+
+                # got to check if only 200 will get passed.
+                # Temp check
+                print(response.status_code)
+                return response
             except requests.exceptions.ConnectTimeout as e:
                 '''
                     ConnectionTimeout: 
@@ -74,12 +78,14 @@ class Client:
 
                     The timeout parameter in requests.get(url, timeout) 
                 '''
+                
                 print(f"{e}, good to retry")
                 continue
             except requests.exceptions.HTTPError as e:
                 '''
                     common status codes to retry: 500,502, 503, 504, 429
                 '''
+                
                 if response.status_code in ACCEPTED_STATUS_CODES:
                     print(f"{HTTPStatus(response.stats_code)}, good to retry.")
                     continue
@@ -90,9 +96,9 @@ class Client:
                 '''
                     ReadTimeout:
                         - Time to receive the response after connection is made
-
-                    The timeout parameter in requests.get(url, timeout)
+                        - The timeout parameter in requests.get(url, timeout)
                 '''
+
                 print('The server did not send any data in the allotted amount of time.')
                 raise
             except requests.exceptions.RequestException:
@@ -105,19 +111,19 @@ class Client:
 
     def test_success_endpoint(self) -> Dict[str,str]:
         self.url += "/ok"
-        response = requests.get(self.url)
+
+        response = api_call()
         if HTTPStatus(response.status_code).phrase == "OK":
             print('HTTPStatus response phrase:', HTTPStatus(response.status_code).phrase)
             return response.json()
         else:
-            return response.status_code
+            return response # should be a status_code, exception, raise 
 
     def test_sleep(self, server:int, timeout:int):
         self.url += f"/sleep?server_elapsed_time={server}&client_timeout_request={timeout}"
 
         print("Starting test_sleep method:")
-        response = requests.get(self.url)
-
+        response = api_call()
         if HTTPStatus(response.status_code).phrase == "OK":
             print(f"Time elapsed: {response.elapsed}")
             return response.json()
