@@ -58,6 +58,7 @@ class Client:
             try:
                 response = requests.get(self.url)
                 # anything under here does not get computed if requests.get raises an exception
+                
                 # total_time += response.elapsed -- cant use this the way I want to. 
                 return response.json()
             except requests.exceptions.ConnectTimeout as e:
