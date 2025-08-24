@@ -56,14 +56,15 @@ class Client:
         api_timer = API_TIMER()
         while time.perf_counter() - api_timer.start_time < api_time.max_duration:
             try:
+                # need to implement a sleep time here.
                 response = requests.get(self.url)
                 '''
                     Anything under here does not get computed if requests.get raises an exception
                 '''
 
-                # got to check if only 200 will get passed.
-                # Temp check
-                print(response.status_code)
+                # Need to verify that only code 200 gets passed
+                
+                print(response.status_code) # temporary, will delete later.
                 return response
             except requests.exceptions.ConnectTimeout as e:
                 '''
@@ -128,5 +129,5 @@ class Client:
             print(f"Time elapsed: {response.elapsed}")
             return response.json()
         else:
-            return response.status_code
+            return response
 
