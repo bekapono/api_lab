@@ -18,10 +18,13 @@ def get_url():
     load_dotenv()
     return os.getenv("BASE_URL")
 
-class API_TIMER:
+class HttpRetryConfig:
     def __init__(self):
-        max_duration = 30 
+        max_duration = 30
         start_time = time.perf_counter()
+        attempts = 0
+        backoff_factor = 2 
+
 
 class Client:
     ACCEPTED_STATUS_CODES = {
@@ -53,10 +56,11 @@ class Client:
                 - avoid thundering heard by delay + random amount.
         '''
 
-        api_timer = API_TIMER()
-        while time.perf_counter() - api_timer.start_time < api_time.max_duration:
+        http_retry_config = HttpRetryConfig()
+        while time.perf_counter() - http_retry_config.start_time < http_retry_config.max_duration:
             try:
                 # need to implement a sleep time here.
+
                 response = requests.get(self.url)
                 '''
                     Anything under here does not get computed if requests.get raises an exception
@@ -107,7 +111,7 @@ class Client:
                 raise
 
         # ran out of times/appemptes
-        return None # place-holder
+        raise Exception("Exhaused timed attempted.")
 
 
     def test_success_endpoint(self) -> Dict[str,str]:
