@@ -24,16 +24,10 @@ async def sleep_endpoint(server_elapsed_time: int, client_timeout_request: int):
         what i want to do is simulate a client side timeout error
         where the timeout set from the client is shorter then the 
         time it takes to for the server to finish it's task.
-
-        thoughts: 
-        - what happens to the asyncio if it doesn't 
-        finish in time? 
-        - do i have to clear up the CPU manually?
-        - can i return before a task is finished?
-        - what happens if i dont add the await
     '''
-    server_task = asyncio.create_task(server_sleep_task(server_elapsed_time))
-    client_task = asyncio.create_task(client_sleep_task(client_timeout_request))
+    #server_task = asyncio.create_task(server_sleep_task(server_elapsed_time))
+    #client_task = asyncio.create_task(client_sleep_task(client_timeout_request))
+    tasks = [asyncio.create_task(server_sleep_task(server_elapsed_time)), asyncio.create_task(client_sleep_task(client_timeout_request))]
     
     '''
         async asyncio.wait(aws, *, timeout=None, return_when=ALL_COMPLETED)
@@ -42,7 +36,8 @@ async def sleep_endpoint(server_elapsed_time: int, client_timeout_request: int):
     '''
     # wait for the first one to complete
     done, pending = await asyncio.wait(
-            {sever_task, client_task},
+            #{sever_task, client_task},
+            tasks,
             return_when=asyncio.FIRST_COMPLETED
             )
     
