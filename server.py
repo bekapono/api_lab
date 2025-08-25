@@ -1,7 +1,17 @@
-from fastapi import FastAPI 
+from fastapi import FastAPI
+from typing import Dict
 import asyncio 
 
 app = FastAPI()
+
+# --- TEMP DEFS FOR TESTING PURPOSES --- # 
+async def server_sleep_task(sleep_time: int) -> Dict[str, int]:
+    await asyncio.sleep(sleep_time)
+    return {"SERVER" : sleep_time}
+
+async def client_sleep_task(sleep_time: int) -> Dict[str, int]:
+    await asyncio.sleep(sleep_time)
+    return {"CLIENT" : sleep_time}
 
 @app.get("/ok")
 async def root():
@@ -22,7 +32,26 @@ async def sleep_endpoint(server_elapsed_time: int, client_timeout_request: int):
         - can i return before a task is finished?
         - what happens if i dont add the await
     '''
-    task_1 = await asyncio.sleep(server_elapsed_time)
-    task_2 = await asyncio.sleep(client_timeout_request)
+    server_task = asyncio.create_task(server_sleep_task(server_elapsed_time))
+    client_task = asyncio.create_task(client_sleep_task(client_timeout_request))
     
-    return {"sleptMs": "place-holder"}
+    '''
+        async asyncio.wait(aws, *, timeout=None, return_when=ALL_COMPLETED)
+
+        return_when={ALL_COMPLETED, FIRST_EXCEPTION, ALL_COMPLETED}
+    '''
+    # wait for the first one to complete
+    done, pending = await asyncio.wait(
+            {sever_task, client_task},
+            return_when=asyncio.FIRST_COMPLETED
+            )
+    
+    # grab the first completed result
+    first_result = done.pop().result()
+
+    # cancel remaining tasks
+    for task in pending:
+        task.cancel()
+
+
+    return first_result
